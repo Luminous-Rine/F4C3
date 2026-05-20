@@ -1,0 +1,33 @@
+# ────────────────────────────────────────────────
+# requirements.txt
+# F4C3 人脸考勤系统  |  macOS 开发 / Raspberry Pi 4 部署
+# ────────────────────────────────────────────────
+
+# ── 核心推理 ─────────────────────────────────────
+# macOS (x86_64 / Apple Silicon):
+onnxruntime>=1.17.0
+# Raspberry Pi 4 (ARM64) 请改用：
+#   pip install onnxruntime  （官方从 1.16+ 提供 ARM64 whl）
+
+# ── 图像处理 ─────────────────────────────────────
+# macOS 开发用（有 GUI）：
+opencv-python>=4.9.0
+# Raspberry Pi 4 无头部署改用：
+#   pip install opencv-python-headless>=4.9.0
+
+# ── 数值计算 ─────────────────────────────────────
+numpy>=1.24.0
+
+# ── 人脸识别（MobileFaceNet + 五官对齐）─────────
+insightface>=0.7.3
+
+# ── InsightFace 依赖 ─────────────────────────────
+scikit-image>=0.21.0
+Pillow>=10.0.0
+
+# ── ONNX 模型转换（仅 macOS 开发机需要）──────────
+# 仅运行 scripts/prepare_models.py 时需要：
+ultralytics>=8.1.0
+
+# ── 其余标准库（无需安装）────────────────────────
+# argparse, csv, pickle, threading, pathlib → Python 内置

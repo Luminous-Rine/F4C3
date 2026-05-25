@@ -1,52 +1,54 @@
 import cv2
 import numpy as np
 import time
-from picamera import PiCamera # 如果报错，请尝试从 picamera2 导入：from picamera2 import Picamera2
 
-def start_pi_camera():
-    print("🟢 正在通过官方 Picamera 驱动初始化 OV5647 摄像头...")
+def start_pi_camera_v2():
+    print("🟢 正在通过新版 Bookworm 官方 Picamera2 驱动初始化 OV5647...")
     
-    # 1. 初始化官方新架构相机
     try:
-        # 新版 Bookworm 推荐写法
+        # 1. 导入全新的官方 Picamera2 模块
         from picamera2 import Picamera2
         picam = Picamera2()
-        # 配置分辨率
-        picam.configure(picam.create_video_configuration(main={"size": (640, 480)}))
+        
+        # 2. 配置视频流的分辨率（640x480 最适合树莓派跑 YOLO）
+        config = picam.create_video_configuration(main={"size": (640, 480)})
+        picam.configure(config)
+        
+        # 3. 启动相机硬件
         picam.start()
-    except ImportError:
-        # 如果是老版封装
-        import cv2
-        print("尝试进入兼容捕获模式...")
-        # 如果无法使用 picamera2 库，可让 Claude 协助你配置标准的封装层
+        
+    except Exception as e:
+        print(f"❌ 初始化 Picamera2 失败，错误原因: {e}")
+        print("请确认是否运行了: sudo apt install python3-picamera2")
         return
 
-    print("🟢 摄像头已常开，正在实时监听画面... (按 Ctrl + C 退出)")
+    print("🟢 摄像头已常开，正在实时抓取画面... (按 Ctrl + C 退出)")
     
     try:
         while True:
-            # 2. 直接从官方驱动抓取一帧 NumPy 图像（完美契合 OpenCV 格式）
+            # 4. 关键：Picamera2 提供了完美的 capture_array() 
+            # 这会直接吐出一个 100% 兼容 OpenCV 的 NumPy 矩阵（BGR/RGB 格式）
             frame = picam.capture_array()
             
-            # 因为 NoIR 摄像头画面是红色的，这里可以顺手把它转成黑白（灰度图）
-            # gray_frame = cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY)
-
             if frame is None or frame.size == 0:
-                print("⚠️ 未能读取到画面...")
+                print("⚠️ 未能成功读取到画面帧...")
                 continue
 
             # ----------------------------------------------------
-            #  【核心跳板】后续你的 YOLO 和人脸识别代码直接在这里处理 frame
+            #  【核心跳板】后续你的 YOLO 检测和人脸识别代码直接在这里处理 frame
             # ----------------------------------------------------
-            # print("成功抓取到一帧，形状为:", frame.shape) 
+            # 如果你看到这一行持续打印，说明你的硬件和常开监听彻底通了！
+            print(f"成功抓取画面帧！图像大小: {frame.shape[1]}x{frame.shape[0]}") 
             
-            time.sleep(0.03)
+            # 控制一下频率，防止主循环跑太快把 CPU 撑爆
+            time.sleep(0.05)
 
     except KeyboardInterrupt:
         print("\n🛑 收到退出指令，正在关闭摄像头...")
     finally:
+        # 5. 关闭相机释放硬件锁，否则下次运行会报设备忙
         picam.stop()
-        print("🏁 官方摄像头已成功关闭，释放资源。")
+        print("🏁 官方摄像头已安全释放。")
 
 if __name__ == "__main__":
-    start_pi_camera()
+    start_pi_camera_v2()
